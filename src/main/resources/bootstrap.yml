@@ -5,7 +5,18 @@ spring:
   cloud:
     config:
       discovery:
-        enable: true
+        enabled: true
         service-id: config-server
-
       profile: dev
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8081/eureka/
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: bus-refresh
+
