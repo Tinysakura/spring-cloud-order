@@ -8,7 +8,8 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @SpringBootApplication
 @EnableDiscoveryClient
-@EnableFeignClients
+//注意扫描包的位置(这里我们使用了外部的依赖)
+@EnableFeignClients(basePackages = "com.cfh.practice.client")
 @EnableTransactionManagement
 public class OrderApplication {
 

@@ -1,8 +1,6 @@
 package com.cfh.practice.order.controller;
 
 import com.cfh.practice.client.ProductClient;
-import com.cfh.practice.order.dataobject.ProductInfo;
-import com.cfh.practice.order.dto.CartDTO;
 import common.ProductInfoOutput;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
