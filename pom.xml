@@ -6,7 +6,8 @@
     <groupId>com.cfh.practice</groupId>
     <artifactId>order</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <!--将order作为父工程-->
+    <packaging>pom</packaging>
 
     <name>order</name>
     <description>Demo project for Spring Boot</description>
@@ -23,6 +24,9 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>1.8</java.version>
         <spring-cloud.version>Finchley.SR1</spring-cloud.version>
+        <product-client.version>0.0.1-SNAPSHOT</product-client.version>
+        <product-common.version>0.0.1-SNAPSHOT</product-common.version>
+        <order-common.version>0.0.1-SNAPSHOT</order-common.version>
     </properties>
 
     <dependencies>
@@ -74,10 +78,24 @@
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
+        </dependency>
+
+        <!--添加对product服务的相关依赖-->
+        <dependency>
+            <groupId>com.cfh.practice</groupId>
+            <artifactId>product-client</artifactId>
+            <version>${product-client.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.cfh.practice</groupId>
+            <artifactId>product-common</artifactId>
+            <version>${product-common.version}</version>
         </dependency>
     </dependencies>
 

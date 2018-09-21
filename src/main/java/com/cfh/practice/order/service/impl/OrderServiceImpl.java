@@ -1,6 +1,6 @@
 package com.cfh.practice.order.service.impl;
 
-import com.cfh.practice.order.config.ProductClient;
+import com.cfh.practice.client.ProductClient;
 import com.cfh.practice.order.dataobject.OrderDetail;
 import com.cfh.practice.order.dataobject.OrderMaster;
 import com.cfh.practice.order.dataobject.ProductInfo;
@@ -12,6 +12,8 @@ import com.cfh.practice.order.repository.OrderDetailRepository;
 import com.cfh.practice.order.repository.OrderMasterRepository;
 import com.cfh.practice.order.service.OrderService;
 import com.cfh.practice.order.util.KeyUtil;
+import common.DecreaseStockInput;
+import common.ProductInfoOutput;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -48,12 +50,12 @@ public class OrderServiceImpl implements OrderService {
             productIdList.add(orderDetail.getProductId());
         }
 
-        List<ProductInfo> productInfos = productClient.listForOrder(productIdList);
+        List<ProductInfoOutput> productInfos = productClient.listForOrder(productIdList);
 
         //计算总价
         BigDecimal totalAmount = BigDecimal.ZERO;
         for (OrderDetail orderDetail : orderDTO.getOrderDetailList()) {
-            for (ProductInfo productInfo : productInfos) {
+            for (ProductInfoOutput productInfo : productInfos) {
                 if(productInfo.getProductId().equals(orderDetail.getProductId())) {
                     BigDecimal quantity = new BigDecimal(orderDetail.getProductQuantity());
                     BigDecimal priece = productInfo.getProductPrice();
@@ -71,16 +73,16 @@ public class OrderServiceImpl implements OrderService {
         }
 
         //扣库存(调用商品服务)
-        List<CartDTO> cartDTOList = new ArrayList<>();
+        List<DecreaseStockInput> decreaseStockInputs = new ArrayList<>();
 
         for (OrderDetail orderDetail : orderDTO.getOrderDetailList()) {
-            CartDTO cartDTO = new CartDTO();
-            cartDTO.setProductId(orderDetail.getProductId());
-            cartDTO.setProductQuantity(orderDetail.getProductQuantity());
+            DecreaseStockInput decreaseStockInput = new DecreaseStockInput();
+            decreaseStockInput.setProductId(orderDetail.getProductId());
+            decreaseStockInput.setProductQuantity(orderDetail.getProductQuantity());
 
-            productClient.decreaseStock(cartDTOList);
+            decreaseStockInputs.add(decreaseStockInput);
         }
-
+        productClient.decreaseStock(decreaseStockInputs);
 
         //订单入库
         OrderMaster orderMaster = new OrderMaster();
