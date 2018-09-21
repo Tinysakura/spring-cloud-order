@@ -2,19 +2,11 @@ spring:
   application:
     name: order
 
-  jpa:
-    show-sql: true
+  cloud:
+    config:
+      discovery:
+        enable: true
+        service-id: config-server
 
-  datasource:
-    driver-class-name: com.mysql.jdbc.Driver
-    username: cloud
-    password: 19981002520qq
-    url: jdbc:mysql://localhost:3306/orders?useSSL=false&characterEncoding=utf-8
+      profile: dev
 
-eureka:
-  client:
-    service-url:
-      defaultZone: http://localhost:8081/eureka/
-
-server:
-  port: 9091
