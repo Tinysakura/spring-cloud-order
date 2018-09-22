@@ -12,6 +12,7 @@ import java.util.Date;
  * 2017-12-09 21:23
  */
 @Data
+//@Table(name = "T_proxxx")
 @Entity
 public class ProductInfo {
 

@@ -3,8 +3,6 @@ package com.cfh.practice.order.service.impl;
 import com.cfh.practice.client.ProductClient;
 import com.cfh.practice.order.dataobject.OrderDetail;
 import com.cfh.practice.order.dataobject.OrderMaster;
-import com.cfh.practice.order.dataobject.ProductInfo;
-import com.cfh.practice.order.dto.CartDTO;
 import com.cfh.practice.order.dto.OrderDTO;
 import com.cfh.practice.order.enums.OrderStatusEnum;
 import com.cfh.practice.order.enums.PayStatusEnum;
@@ -12,16 +10,21 @@ import com.cfh.practice.order.repository.OrderDetailRepository;
 import com.cfh.practice.order.repository.OrderMasterRepository;
 import com.cfh.practice.order.service.OrderService;
 import com.cfh.practice.order.util.KeyUtil;
-import common.DecreaseStockInput;
+import com.sun.javafx.binding.StringFormatter;
 import common.ProductInfoOutput;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by 廖师兄
@@ -38,6 +41,15 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private ProductClient productClient;
+
+    @Autowired
+    private RedissonClient redissonClient;
+
+    @Autowired
+    private StringRedisTemplate redisTemplate;
+
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
 
     @Transactional
     @Override
@@ -73,16 +85,40 @@ public class OrderServiceImpl implements OrderService {
         }
 
         //扣库存(调用商品服务)
-        List<DecreaseStockInput> decreaseStockInputs = new ArrayList<>();
+//        List<DecreaseStockInput> decreaseStockInputs = new ArrayList<>();
+//
+//        for (OrderDetail orderDetail : orderDTO.getOrderDetailList()) {
+//            DecreaseStockInput decreaseStockInput = new DecreaseStockInput();
+//            decreaseStockInput.setProductId(orderDetail.getProductId());
+//            decreaseStockInput.setProductQuantity(orderDetail.getProductQuantity());
+//
+//            decreaseStockInputs.add(decreaseStockInput);
+//        }
+//        productClient.decreaseStock(decreaseStockInputs);
 
-        for (OrderDetail orderDetail : orderDTO.getOrderDetailList()) {
-            DecreaseStockInput decreaseStockInput = new DecreaseStockInput();
-            decreaseStockInput.setProductId(orderDetail.getProductId());
-            decreaseStockInput.setProductQuantity(orderDetail.getProductQuantity());
+        //Todo 实现异步扣库存
+        //使用分布式锁保证正确性
+        RLock distributedLock = redissonClient.getLock("decrease_stock");
+        //这里的锁时间写死了，应该放在配置在文件中根据实际场景进行调整
+        distributedLock.lock(1000, TimeUnit.MICROSECONDS);
+        try {
+            //获取redis中相应商品的数量减去相应的库存
+            String keyFormat = "product_stock_%s";
+            for (OrderDetail detail : orderDTO.getOrderDetailList()) {
+                String key = StringFormatter.format(keyFormat, detail.getProductId()).getValue();
+                String stockString = redisTemplate.opsForValue().get(key);
+                Long stockLong = new Long(stockString);
+                stockLong -= detail.getProductQuantity();
+                redisTemplate.opsForValue().set(key, String.valueOf(stockLong));
+            }
 
-            decreaseStockInputs.add(decreaseStockInput);
+            //发送一个减库存的消息
+            sendDecreaseStockMessage(orderId);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            distributedLock.unlock();
         }
-        productClient.decreaseStock(decreaseStockInputs);
 
         //订单入库
         OrderMaster orderMaster = new OrderMaster();
@@ -92,7 +128,25 @@ public class OrderServiceImpl implements OrderService {
         orderMaster.setOrderStatus(OrderStatusEnum.NEW.getCode());
         orderMaster.setPayStatus(PayStatusEnum.WAIT.getCode());
 
-        orderMasterRepository.save(orderMaster);
+        try {
+            orderMasterRepository.save(orderMaster);
+        } catch (Exception e) {
+            e.printStackTrace();
+            //订单入库若失败需要手动回滚redis中的数据
+            rollBackRedis(orderDTO.getOrderDetailList());
+        }
         return orderDTO;
+    }
+
+    private void rollBackRedis(List<OrderDetail> orderDetails){
+        String keyFormat = "product_stock_%s";
+        for (OrderDetail detail : orderDetails) {
+            String key = StringFormatter.format(keyFormat, detail.getProductId()).getValue();
+            redisTemplate.opsForValue().increment(key, detail.getProductQuantity());
+        }
+    }
+
+    private void sendDecreaseStockMessage(String orderId){
+        rabbitTemplate.convertAndSend("decreaseStockQueue", orderId);
     }
 }

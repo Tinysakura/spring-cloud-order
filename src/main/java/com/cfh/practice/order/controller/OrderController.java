@@ -25,7 +25,7 @@ import java.util.Map;
  * 2017-12-10 16:36
  */
 @RestController
-@RequestMapping("/order")
+@RequestMapping("/com/cfh/practice/order/dto")
 @Slf4j
 public class OrderController {
 
