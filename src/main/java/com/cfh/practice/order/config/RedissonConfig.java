@@ -20,7 +20,7 @@ public class RedissonConfig {
     @Value("${redisson.host}")
     String host;
 
-    @Value("${redisson,port}")
+    @Value("${redisson.port}")
     String port;
 
     @Bean
