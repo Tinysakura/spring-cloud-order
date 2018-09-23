@@ -7,7 +7,12 @@
     <artifactId>order</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <!--将order作为父工程-->
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>server</module>
+        <module>common</module>
+    </modules>
 
     <name>order</name>
     <description>Demo project for Spring Boot</description>

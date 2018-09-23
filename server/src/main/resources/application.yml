@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: order
+
+  jpa:
+    show-sql: true
+
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    username: cloud
+    password: 19981002520qq
+    url: jdbc:mysql://localhost:3306/orders?useSSL=false&characterEncoding=utf-8
+
+  redis:
+    database: 0
+    host: localhost
+    port: 6380
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8081/eureka/
+
+server:
+  port: 9091
+
+redisson:
+  host: localhost
+  port: 6379
+
+env:
+  dev
+  
+girl:
+  name: 网修好了
+  age: 32
