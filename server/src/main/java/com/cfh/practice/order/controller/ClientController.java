@@ -1,7 +1,7 @@
 package com.cfh.practice.order.controller;
 
 import com.cfh.practice.client.ProductClient;
-import common.ProductInfoOutput;
+import com.cfh.practice.common.ProductInfoOutput;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;

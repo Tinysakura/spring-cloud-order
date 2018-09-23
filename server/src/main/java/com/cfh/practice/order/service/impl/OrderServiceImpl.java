@@ -1,6 +1,7 @@
 package com.cfh.practice.order.service.impl;
 
 import com.cfh.practice.client.ProductClient;
+import com.cfh.practice.common.ProductInfoOutput;
 import com.cfh.practice.order.dataobject.OrderDetail;
 import com.cfh.practice.order.dataobject.OrderMaster;
 import com.cfh.practice.order.dto.OrderDTO;
@@ -11,7 +12,6 @@ import com.cfh.practice.order.repository.OrderMasterRepository;
 import com.cfh.practice.order.service.OrderService;
 import com.cfh.practice.order.util.KeyUtil;
 import com.sun.javafx.binding.StringFormatter;
-import common.ProductInfoOutput;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -113,7 +113,7 @@ public class OrderServiceImpl implements OrderService {
             }
 
             //发送一个减库存的消息
-            sendDecreaseStockMessage(orderId);
+            sendDecreaseStockMessage(orderDTO);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -146,7 +146,7 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-    private void sendDecreaseStockMessage(String orderId){
-        rabbitTemplate.convertAndSend("decreaseStockQueue", orderId);
+    private void sendDecreaseStockMessage(OrderDTO orderDTO){
+        rabbitTemplate.convertAndSend("decreaseStockQueue", orderDTO);
     }
 }

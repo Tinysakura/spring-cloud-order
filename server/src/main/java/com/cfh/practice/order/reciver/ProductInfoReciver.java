@@ -1,9 +1,9 @@
 package com.cfh.practice.order.reciver;
 
+import com.cfh.practice.common.ProductInfoOutput;
 import com.cfh.practice.order.util.JsonUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.sun.javafx.binding.StringFormatter;
-import common.ProductInfoOutput;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
