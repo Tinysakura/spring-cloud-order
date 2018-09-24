@@ -5,8 +5,10 @@ import com.cfh.practice.common.ProductInfoOutput;
 import com.cfh.practice.order.dataobject.OrderDetail;
 import com.cfh.practice.order.dataobject.OrderMaster;
 import com.cfh.practice.order.dto.OrderDTO;
+import com.cfh.practice.order.enums.OrderErrorsEnum;
 import com.cfh.practice.order.enums.OrderStatusEnum;
 import com.cfh.practice.order.enums.PayStatusEnum;
+import com.cfh.practice.order.exception.OrderException;
 import com.cfh.practice.order.repository.OrderDetailRepository;
 import com.cfh.practice.order.repository.OrderMasterRepository;
 import com.cfh.practice.order.service.OrderService;
@@ -24,6 +26,7 @@ import javax.transaction.Transactional;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -139,6 +142,34 @@ public class OrderServiceImpl implements OrderService {
         return orderDTO;
     }
 
+    @Override
+    @Transactional
+    public OrderDTO finish(String orderID) {
+        Optional<OrderMaster> optionalOrderMaster = orderMasterRepository.findById(orderID);
+
+        if (!optionalOrderMaster.isPresent()) {
+            throw new OrderException(OrderErrorsEnum.UNPRESENT.getCode(), OrderErrorsEnum.UNPRESENT.getMessage());
+        }
+
+        OrderMaster orderMaster = optionalOrderMaster.get();
+        //检查订单状态，只有状态为新订单的订单才能被确认
+        if (orderMaster.getOrderStatus() != OrderStatusEnum.NEW.getCode()) {
+            throw  new OrderException(OrderErrorsEnum.ERRORSTATU.getCode(), OrderErrorsEnum.ERRORSTATU.getMessage());
+        }
+
+        List<OrderDetail> orderDetails = orderDetailRepository.findAllByOrderId(orderID);
+        OrderDTO orderDTO = new OrderDTO();
+        BeanUtils.copyProperties(orderMaster, orderDTO);
+
+        //这里最好再对orderDetailList的状态做一次检查
+        orderDTO.setOrderDetailList(orderDetails);
+
+        orderMaster.setOrderStatus(OrderStatusEnum.FINISHED.getCode());
+        orderMasterRepository.save(orderMaster);
+
+        return orderDTO;
+    }
+
     private void rollBackRedis(List<OrderDetail> orderDetails){
         String keyFormat = "product_stock_%s";
         for (OrderDetail detail : orderDetails) {
@@ -150,4 +181,5 @@ public class OrderServiceImpl implements OrderService {
     private void sendDecreaseStockMessage(OrderDTO orderDTO){
         rabbitTemplate.convertAndSend("decreaseStockQueue", orderDTO);
     }
+
 }

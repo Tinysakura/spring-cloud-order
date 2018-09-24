@@ -14,4 +14,11 @@ public interface OrderService {
      * @return
      */
     OrderDTO create(OrderDTO orderDTO);
+
+    /**
+     * 修改订单状态为已完成，只有卖家有权限调用该接口
+     * @param orderID
+     * @return
+     */
+    OrderDTO finish(String orderID);
 }
