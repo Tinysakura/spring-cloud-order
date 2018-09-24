@@ -7,17 +7,19 @@ import com.cfh.practice.order.repository.OrderMasterRepository;
 import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 /**
  * @Author: cfh
  * @Date: 2018/9/22 21:45
  * @Description: 接受扣库存的消息处理结果的处理类
  */
+@Component
 public class DecreaseStockReplyReciver {
     @Autowired
     private OrderMasterRepository orderMasterRepository;
 
-    @RabbitListener(queues = "decreaseStockReplyQueue", queuesToDeclare = @Queue("decreaseStockReplyQueue)"))
+    @RabbitListener(queuesToDeclare = @Queue("decreaseStockReplyQueue"))
     public void receive(DecreaseStockReply decreaseStockReply) {
         OrderMaster orderMaster = orderMasterRepository.findById(decreaseStockReply.getOrderId()).get();
 

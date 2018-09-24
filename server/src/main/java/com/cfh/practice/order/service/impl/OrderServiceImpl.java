@@ -113,6 +113,7 @@ public class OrderServiceImpl implements OrderService {
             }
 
             //发送一个减库存的消息
+            orderDTO.setOrderId(orderId);
             sendDecreaseStockMessage(orderDTO);
         } catch (Exception e) {
             e.printStackTrace();
