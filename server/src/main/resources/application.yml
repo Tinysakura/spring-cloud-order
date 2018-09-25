@@ -40,3 +40,8 @@ env:
 girl:
   name: 网修好了
   age: 32
+
+feign:
+  hystrix:
+    enabled: true
+
